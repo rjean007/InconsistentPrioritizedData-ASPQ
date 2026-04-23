@@ -8,6 +8,8 @@ The source code of Casper system is available in the Casper folder (see installa
 
 python3.11 or later is required.
 
+Benchmark data files can be found on the zenodo repository https://doi.org/10.5281/zenodo.19705686.
+
 ## Description
 
 Use main.py to evaluate query potential answers under different semantics
