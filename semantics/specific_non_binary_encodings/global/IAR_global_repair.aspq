@@ -1,0 +1,55 @@
+%@exists
+
+weak_attacks(C, Id) :- conf(C), inConf(C, Id), inConf(C, Id1), Id != Id1, not pref(Id, Id1).
+
+reachable(Id) :- cause(C), inCause(C,Id).
+reachable(Id1) :- inConf(C, Id), weak_attacks(C, Id), reachable(Id), inConf(C, Id1).
+
+% inNeg corresponds to B in the proof of Theorem 9
+{inNeg(Id);outNeg(Id)} = 1 :-reachable(Id).
+
+
+%Ensures all causes are violated thus the query does not hold in A\inNeg.
+violatedCause(C) :- inCause(C,Id), inNeg(Id).
+:- cause(C), not violatedCause(C).
+
+
+% define the A'_i of the proof with \alpha_i \not \in A'_i
+{inRepair(Id1, Id);outRepair(Id1, Id)} = 1 :-reachable(Id1), inNeg(Id).
+:- inNeg(Id), inRepair(Id, Id).
+
+
+solved(C, Id):-inConf(C,Id1), not inRepair(Id1, Id), inNeg(Id).
+:- conf(C), not solved(C, Id), inNeg(Id).
+
+
+dangerous(C, Id):-conf(C), #count{Id1:inConf(C, Id1), not inRepair(Id1, Id), inNeg(Id)}=1, inNeg(Id).
+keepOut(Id1, Id):-dangerous(C, Id),inConf(C, Id1),not inRepair(Id1, Id), inNeg(Id).
+:-not inRepair(Id1, Id), not keepOut(Id1, Id), reachable(Id1), inNeg(Id).
+
+
+%@forall
+
+global_imp(Id1,Id):- reachable(Id1), inNeg(Id), not nglobal_imp(Id1,Id).
+nglobal_imp(Id1,Id):- reachable(Id1), inNeg(Id), not global_imp(Id1,Id).
+
+solved_global(C, Id):-inConf(C,Id1), not global_imp(Id1,Id), inNeg(Id).
+:- conf(C), not solved_global(C, Id), inNeg(Id).
+
+
+impMinusRepair(Id1,Id) :- global_imp(Id1,Id), not inRepair(Id1,Id).
+repairMinusImp(Id1,Id) :- inRepair(Id1,Id), not global_imp(Id1,Id).
+
+diff(Id) :- impMinusRepair(Id1,Id).
+diff(Id) :- repairMinusImp(Id1,Id).
+fake_improvement(Id) :- not diff(Id), inNeg(Id).
+
+ok(Alpha, Id) :- inNeg(Id), repairMinusImp(Alpha,Id), impMinusRepair(Beta,Id), pref(Beta,Alpha).
+fake_improvement(Id) :- inNeg(Id), repairMinusImp(Alpha,Id), not ok(Alpha,Id).
+
+global_improvement(Id) :- not fake_improvement(Id), inNeg(Id).
+total :- inNeg(Id), global_improvement(Id).
+:- not total.
+
+%@constraint
+:- not fail.

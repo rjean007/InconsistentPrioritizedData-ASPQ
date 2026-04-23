@@ -1,0 +1,48 @@
+%@exists
+
+weak_attacks(C, Id) :- conf(C), inConf(C, Id), inConf(C, Id1), Id != Id1, not pref(Id, Id1).
+
+reachable(Id) :- cause(C), inCause(C,Id).
+reachable(Id1) :- inConf(C, Id), weak_attacks(C, Id), reachable(Id), inConf(C, Id1).
+
+{inRepair(Id)} :-reachable(Id).
+
+solved(C):-inConf(C,Id1), not inRepair(Id1).
+:- conf(C), not solved(C).
+
+safe(C) :- inConf(C,Id1),inConf(C,Id2), Id1!=Id2, not inRepair(Id1), not inRepair(Id2).
+keepOut(Id):-inConf(C, Id), not inRepair(Id), not safe(C).
+:-not inRepair(Id1), not keepOut(Id1), reachable(Id1).
+
+
+%Ensures at least one cause belongs to our repair thus the query holds.
+violatedCause(C) :- inCause(C,Id), not inRepair(Id).
+sat :- cause(C), not violatedCause(C).
+:- sat.
+
+%@forall
+
+global_imp(Id):- reachable(Id), not nglobal_imp(Id).
+nglobal_imp(Id):- reachable(Id), not global_imp(Id).
+
+solved_global(C):-inConf(C,Id1), not global_imp(Id1).
+:- conf(C), not solved_global(C).
+
+
+impMinusRepair(Id) :- global_imp(Id), not inRepair(Id).
+repairMinusImp(Id) :- inRepair(Id), not global_imp(Id).
+
+diff :- impMinusRepair(Id).
+diff :- repairMinusImp(Id).
+fake_improvement :- not diff.
+
+ok(Alpha) :- repairMinusImp(Alpha),impMinusRepair(Beta),pref(Beta,Alpha).
+fake_improvement :- repairMinusImp(Alpha), not ok(Alpha).
+
+global_improvement :- not fake_improvement.
+:- not global_improvement.
+
+%@constraint
+:- not fail.
+
+
