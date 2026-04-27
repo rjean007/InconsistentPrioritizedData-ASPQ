@@ -1,6 +1,6 @@
 # Using ASP(Q) to Handle Inconsistent Prioritized Data
 
-We describe here how to use the implementation of the algorithms presented in the submitted at KR 2026 paper. 
+We describe here how to use the implementation of the algorithms presented in a paper appearing at KR 2026 whose extended version is available on arxiv (https://arxiv.org/abs/2604.21603). 
 
 The proposed implementation is built on top of the clingo and Casper systems that must be correctly installed.
 The clingo system can be installed as python package via pip (i.e., pip install clingo).
